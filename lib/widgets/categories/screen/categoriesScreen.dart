@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meals/widgets/categories/model/category.dart';
+import 'package:meals/widgets/filters/screen/filter_screen.dart';
 import 'package:meals/widgets/meals/model/meals.dart';
 
 import '../../meals/screen/meals_screen.dart';
@@ -11,10 +12,13 @@ class CategoriesScreen extends StatelessWidget {
     required this.onFavorite,
     required this.favorites,
     super.key,
+    required this.filters,
   });
 
   final void Function(Meal meal) onFavorite;
   final List<Meal>? favorites;
+
+  final Map<Filter, bool> filters;
 
   void _selectCategory(BuildContext context, Category category) {
     Navigator.of(context).push(
@@ -23,6 +27,7 @@ class CategoriesScreen extends StatelessWidget {
           category,
           onFavorite: onFavorite,
           favorites: favorites,
+          filters: filters,
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:meals/widgets/meals/components/list/meal_item.dart';
 import 'package:meals/widgets/meals/model/meals.dart';
 
 import '../../categories/model/category.dart' show Category;
+import '../../filters/screen/filter_screen.dart';
 import '../model/dummies/meals_dummy.dart';
 
 class MealsScreen extends StatelessWidget {
@@ -13,6 +14,7 @@ class MealsScreen extends StatelessWidget {
     this.meals,
     required this.onFavorite,
     required this.favorites,
+    required this.filters,
   });
 
   MealsScreen.fromCategory(
@@ -20,10 +22,18 @@ class MealsScreen extends StatelessWidget {
     super.key,
     required this.onFavorite,
     required this.favorites,
+    required this.filters,
   }) {
     // You can populate this list from dummyMeals or a data source:
     meals = dummyMeals
         .where((meal) => meal.categories.contains(category!.id))
+        .where((meal) {
+          if (filters[Filter.glutenFree]! && !meal.isGlutenFree) return false;
+          if (filters[Filter.lactoseFree]! && !meal.isLactoseFree) return false;
+          if (filters[Filter.vegan]! && !meal.isVegan) return false;
+          if (filters[Filter.vegetarian]! && !meal.isVegetarian) return false;
+          return true;
+        })
         .toList();
   }
 
@@ -33,9 +43,12 @@ class MealsScreen extends StatelessWidget {
     super.key,
     required this.onFavorite,
     required this.favorites,
+    required this.filters,
   }) {
     category = Category(id: 'Favorite', title: title);
   }
+
+  final Map<Filter, bool> filters;
 
   final List<Meal>? favorites;
   final void Function(Meal meal) onFavorite;

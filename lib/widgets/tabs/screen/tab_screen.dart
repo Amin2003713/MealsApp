@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meals/widgets/categories/screen/categoriesScreen.dart';
+import 'package:meals/widgets/filters/screen/filter_screen.dart';
 import 'package:meals/widgets/meals/model/meals.dart';
 import 'package:meals/widgets/meals/screen/meals_screen.dart';
 import 'package:meals/widgets/tabs/components/main_drawer.dart';
@@ -16,6 +17,13 @@ class _TabScreenSate extends State<TabScreen> {
 
   int _selectedIndex = 0;
   List<Meal>? _favoriteMeals = [];
+
+  Map<Filter, bool>? _filterData = {
+    Filter.vegetarian: false,
+    Filter.vegan: false,
+    Filter.glutenFree: false,
+    Filter.lactoseFree: false,
+  };
 
   void _selectPage(int index) {
     setState(() {
@@ -36,6 +44,26 @@ class _TabScreenSate extends State<TabScreen> {
     });
   }
 
+  void _toggleScreen(String screen) async {
+    Navigator.pop(context);
+    if (screen case 'Filters') {
+      var result = await Navigator.of(context).push<Map<Filter, bool>>(
+        MaterialPageRoute(
+          builder: (ctx) => FilterScreen(
+            onFilterChanged: filterChanged,
+            filters: _filterData!,
+          ),
+        ),
+      );
+
+      setState(() {
+        _filterData = result ?? _filterData;
+      });
+    }
+  }
+
+  void filterChanged(bool filter) {}
+
   void _showInfoMessage(String message) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(
@@ -48,6 +76,7 @@ class _TabScreenSate extends State<TabScreen> {
     Widget activePage = CategoriesScreen(
       onFavorite: _toggleFavorite,
       favorites: _favoriteMeals,
+      filters: _filterData!,
     );
     var activePageTitle = 'Categories';
     if (_selectedIndex == 1) {
@@ -56,13 +85,14 @@ class _TabScreenSate extends State<TabScreen> {
         onFavorite: _toggleFavorite,
         _favoriteMeals ?? [],
         favorites: _favoriteMeals,
+        filters: _filterData!,
       );
       activePageTitle = 'Favorite';
     }
 
     return Scaffold(
       appBar: AppBar(title: Text(activePageTitle)),
-      drawer: MainDrawer(),
+      drawer: MainDrawer(onSelectScreen: _toggleScreen),
       body: activePage,
       bottomNavigationBar: BottomNavigationBar(
         onTap: _selectPage,
