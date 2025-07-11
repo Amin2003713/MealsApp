@@ -7,12 +7,19 @@ import '../../categories/model/category.dart' show Category;
 import '../model/dummies/meals_dummy.dart';
 
 class MealsScreen extends StatelessWidget {
-  MealsScreen({super.key, this.category, this.meals, required this.onFavorite});
+  MealsScreen({
+    super.key,
+    this.category,
+    this.meals,
+    required this.onFavorite,
+    required this.favorites,
+  });
 
   MealsScreen.fromCategory(
     this.category, {
     super.key,
     required this.onFavorite,
+    required this.favorites,
   }) {
     // You can populate this list from dummyMeals or a data source:
     meals = dummyMeals
@@ -25,16 +32,22 @@ class MealsScreen extends StatelessWidget {
     this.meals, {
     super.key,
     required this.onFavorite,
+    required this.favorites,
   }) {
     category = Category(id: 'Favorite', title: title);
   }
 
+  final List<Meal>? favorites;
   final void Function(Meal meal) onFavorite;
 
   _onMealSelected(BuildContext context, Meal meal) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => MealDetails(meal: meal, onFavorite: onFavorite),
+        builder: (context) => MealDetails(
+          meal: meal,
+          onFavorite: onFavorite,
+          favorites: favorites ?? [],
+        ),
       ),
     );
   }

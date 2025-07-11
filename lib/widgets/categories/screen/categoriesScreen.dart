@@ -7,15 +7,23 @@ import '../components/category_grid_items.dart';
 import '../model/dummies/dummyCategoryData.dart';
 
 class CategoriesScreen extends StatelessWidget {
-  const CategoriesScreen({required this.onFavorite, super.key});
+  const CategoriesScreen({
+    required this.onFavorite,
+    required this.favorites,
+    super.key,
+  });
 
   final void Function(Meal meal) onFavorite;
+  final List<Meal>? favorites;
 
   void _selectCategory(BuildContext context, Category category) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) =>
-            MealsScreen.fromCategory(category, onFavorite: onFavorite),
+        builder: (context) => MealsScreen.fromCategory(
+          category,
+          onFavorite: onFavorite,
+          favorites: favorites,
+        ),
       ),
     );
   }

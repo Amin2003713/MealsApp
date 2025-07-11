@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meals/widgets/categories/screen/categoriesScreen.dart';
 import 'package:meals/widgets/meals/model/meals.dart';
 import 'package:meals/widgets/meals/screen/meals_screen.dart';
+import 'package:meals/widgets/tabs/components/main_drawer.dart';
 
 class TabScreen extends StatefulWidget {
   const TabScreen({super.key});
@@ -44,19 +45,24 @@ class _TabScreenSate extends State<TabScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Widget activePage = CategoriesScreen(onFavorite: _toggleFavorite);
+    Widget activePage = CategoriesScreen(
+      onFavorite: _toggleFavorite,
+      favorites: _favoriteMeals,
+    );
     var activePageTitle = 'Categories';
     if (_selectedIndex == 1) {
       activePage = MealsScreen.fromMeals(
         'Favorite',
         onFavorite: _toggleFavorite,
         _favoriteMeals ?? [],
+        favorites: _favoriteMeals,
       );
       activePageTitle = 'Favorite';
     }
 
     return Scaffold(
       appBar: AppBar(title: Text(activePageTitle)),
+      drawer: MainDrawer(),
       body: activePage,
       bottomNavigationBar: BottomNavigationBar(
         onTap: _selectPage,

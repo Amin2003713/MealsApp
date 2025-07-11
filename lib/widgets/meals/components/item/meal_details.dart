@@ -3,11 +3,33 @@ import 'package:transparent_image/transparent_image.dart';
 
 import '../../model/meals.dart';
 
-class MealDetails extends StatelessWidget {
-  const MealDetails({super.key, required this.meal, required this.onFavorite});
+class MealDetails extends StatefulWidget {
+  const MealDetails({
+    super.key,
+    required this.meal,
+    required this.onFavorite,
+    required this.favorites,
+  });
 
   final Meal meal;
+  final List<Meal> favorites;
   final void Function(Meal meal) onFavorite;
+
+  @override
+  State<StatefulWidget> createState() => MealDetailsState();
+}
+
+class MealDetailsState extends State<MealDetails> {
+  IconData faveIcon = Icons.star_outline;
+
+  void _onFave() {
+    setState(() {
+      faveIcon = widget.favorites.contains(widget.meal)
+          ? Icons.star
+          : Icons.star_outline;
+    });
+    widget.onFavorite(widget.meal);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +39,11 @@ class MealDetails extends StatelessWidget {
       fontSize: 14,
     );
 
+    final meal = widget.meal;
+    faveIcon = widget.favorites.contains(widget.meal)
+        ? Icons.star
+        : Icons.star_outline;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -25,9 +52,7 @@ class MealDetails extends StatelessWidget {
             color: theme.colorScheme.onSurface,
           ),
         ),
-        actions: [
-          IconButton(onPressed: () => onFavorite(meal), icon: Icon(Icons.star)),
-        ],
+        actions: [IconButton(onPressed: _onFave, icon: Icon(faveIcon))],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
