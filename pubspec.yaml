@@ -40,6 +40,8 @@ dependencies:
   google_fonts: ^6.2.1
   transparent_image: ^2.0.1
   shimmer: ^3.0.0
+  flutter_riverpod: ^2.6.1
+  riverpod_lint: ^2.6.5
 
 
 dev_dependencies:

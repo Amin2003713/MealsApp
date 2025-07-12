@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meals/providers/filters_provider.dart';
 import 'package:meals/widgets/meals/components/item/meal_details.dart';
 import 'package:meals/widgets/meals/components/list/meal_item.dart';
 import 'package:meals/widgets/meals/model/meals.dart';
@@ -7,104 +9,92 @@ import '../../categories/model/category.dart' show Category;
 import '../../filters/screen/filter_screen.dart';
 import '../model/dummies/meals_dummy.dart';
 
-class MealsScreen extends StatelessWidget {
-  MealsScreen({
-    super.key,
-    this.category,
-    this.meals,
-    required this.onFavorite,
-    required this.favorites,
-    required this.filters,
-  });
+class MealsScreen extends ConsumerWidget {
+  MealsScreen({super.key, this.category, this.meals, required this.favorites});
 
-  MealsScreen.fromCategory(
-    this.category, {
-    super.key,
-    required this.onFavorite,
-    required this.favorites,
-    required this.filters,
-  }) {
-    // You can populate this list from dummyMeals or a data source:
-    meals = dummyMeals
-        .where((meal) => meal.categories.contains(category!.id))
-        .where((meal) {
-          if (filters[Filter.glutenFree]! && !meal.isGlutenFree) return false;
-          if (filters[Filter.lactoseFree]! && !meal.isLactoseFree) return false;
-          if (filters[Filter.vegan]! && !meal.isVegan) return false;
-          if (filters[Filter.vegetarian]! && !meal.isVegetarian) return false;
-          return true;
-        })
-        .toList();
-  }
+  MealsScreen.fromCategory(this.category, {super.key, required this.favorites});
 
   MealsScreen.fromMeals(
     String title,
     this.meals, {
     super.key,
-    required this.onFavorite,
     required this.favorites,
-    required this.filters,
   }) {
     category = Category(id: 'Favorite', title: title);
   }
 
-  final Map<Filter, bool> filters;
-
   final List<Meal>? favorites;
-  final void Function(Meal meal) onFavorite;
+  Category? category;
+  List<Meal>? meals;
 
   _onMealSelected(BuildContext context, Meal meal) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => MealDetails(
-          meal: meal,
-          onFavorite: onFavorite,
-          favorites: favorites ?? [],
-        ),
+        builder: (context) =>
+            MealDetails(meal: meal, favorites: favorites ?? []),
       ),
     );
   }
 
-  Widget _mealScreenContents(ThemeData theme) =>
-      (meals != null && meals!.isNotEmpty)
-      ? ListView.builder(
-          itemCount: meals!.length,
-          itemBuilder: (ctx, index) =>
-              MealItem(meal: meals![index], onMealSelected: _onMealSelected),
-        )
-      : Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Ops ... nothing here!',
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Try another category!',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.surfaceBright,
-                ),
-              ),
-            ],
-          ),
-        );
+  Widget _mealScreenContents(ThemeData theme, WidgetRef ref) {
+    var filter = ref.watch(filtersProvider);
 
-  Category? category;
-  List<Meal>? meals;
+    meals = category!.title != 'Favorite'
+        ? dummyMeals
+              .where((meal) => meal.categories.contains(category!.id))
+              .where((meal) {
+                if (filter[Filter.glutenFree]! && !meal.isGlutenFree) {
+                  return false;
+                }
+                if (filter[Filter.lactoseFree]! && !meal.isLactoseFree) {
+                  return false;
+                }
+                if (filter[Filter.vegan]! && !meal.isVegan) return false;
+                if (filter[Filter.vegetarian]! && !meal.isVegetarian) {
+                  return false;
+                }
+                return true;
+              })
+              .toList()
+        : favorites;
+
+    return (meals != null && meals!.isNotEmpty)
+        ? ListView.builder(
+            itemCount: meals!.length,
+            itemBuilder: (ctx, index) =>
+                MealItem(meal: meals![index], onMealSelected: _onMealSelected),
+          )
+        : Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Ops ... nothing here!',
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Try another category!',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.surfaceBright,
+                  ),
+                ),
+              ],
+            ),
+          );
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return (category!.id == 'Favorite')
-        ? _mealScreenContents(theme)
+        ? _mealScreenContents(theme, ref)
         : Scaffold(
             appBar: AppBar(title: Text(category!.title)),
-            body: _mealScreenContents(theme),
+            body: _mealScreenContents(theme, ref),
           );
   }
 }

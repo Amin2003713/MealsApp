@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meals/providers/favorites_provider.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 import '../../model/meals.dart';
 
-class MealDetails extends StatefulWidget {
-  const MealDetails({
-    super.key,
-    required this.meal,
-    required this.onFavorite,
-    required this.favorites,
-  });
+class MealDetails extends ConsumerStatefulWidget {
+  const MealDetails({super.key, required this.meal, required this.favorites});
 
   final Meal meal;
   final List<Meal> favorites;
-  final void Function(Meal meal) onFavorite;
 
   @override
-  State<StatefulWidget> createState() => MealDetailsState();
+  ConsumerState<ConsumerStatefulWidget> createState() => MealDetailsState();
 }
 
-class MealDetailsState extends State<MealDetails> {
+class MealDetailsState extends ConsumerState<MealDetails> {
   IconData faveIcon = Icons.star_outline;
 
   void _onFave() {
@@ -28,7 +24,16 @@ class MealDetailsState extends State<MealDetails> {
           ? Icons.star
           : Icons.star_outline;
     });
-    widget.onFavorite(widget.meal);
+
+    final added = ref
+        .read(favoriteMealsProvider.notifier)
+        .toggleFavorite(widget.meal);
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(added ? 'added to favorites' : 'removed from favorites'),
+      ),
+    );
   }
 
   @override
@@ -40,7 +45,8 @@ class MealDetailsState extends State<MealDetails> {
     );
 
     final meal = widget.meal;
-    faveIcon = widget.favorites.contains(widget.meal)
+
+    faveIcon = ref.watch(favoriteMealsProvider).contains(widget.meal)
         ? Icons.star
         : Icons.star_outline;
 
