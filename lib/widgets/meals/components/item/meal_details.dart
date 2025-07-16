@@ -1,54 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meals/providers/favorites_provider.dart';
+import 'package:meals/widgets/meals/model/meals.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-import '../../model/meals.dart';
-
-class MealDetails extends ConsumerStatefulWidget {
-  const MealDetails({super.key, required this.meal, required this.favorites});
+class MealDetails extends ConsumerWidget {
+  const MealDetails({super.key, required this.meal});
 
   final Meal meal;
-  final List<Meal> favorites;
 
-  @override
-  ConsumerState<ConsumerStatefulWidget> createState() => MealDetailsState();
-}
-
-class MealDetailsState extends ConsumerState<MealDetails> {
-  IconData faveIcon = Icons.star_outline;
-
-  void _onFave() {
-    setState(() {
-      faveIcon = widget.favorites.contains(widget.meal)
-          ? Icons.star
-          : Icons.star_outline;
-    });
-
-    final added = ref
+  void _toggleFavorite(BuildContext context, WidgetRef ref) {
+    final wasAdded = ref
         .read(favoriteMealsProvider.notifier)
-        .toggleFavorite(widget.meal);
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(added ? 'added to favorites' : 'removed from favorites'),
-      ),
-    );
+        .toggleFavorite(meal);
+
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            wasAdded ? 'Added to favorites' : 'Removed from favorites',
+          ),
+        ),
+      );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFavorite = ref.watch(favoriteMealsProvider).contains(meal);
     final theme = Theme.of(context);
-    final metaTextStyle = TextStyle(
+    final metaStyle = TextStyle(
       color: theme.colorScheme.onSurface.withAlpha(154),
       fontSize: 14,
     );
-
-    final meal = widget.meal;
-
-    faveIcon = ref.watch(favoriteMealsProvider).contains(widget.meal)
-        ? Icons.star
-        : Icons.star_outline;
 
     return Scaffold(
       appBar: AppBar(
@@ -58,111 +42,47 @@ class MealDetailsState extends ConsumerState<MealDetails> {
             color: theme.colorScheme.onSurface,
           ),
         ),
-        actions: [IconButton(onPressed: _onFave, icon: Icon(faveIcon))],
+        actions: [
+          IconButton(
+            onPressed: () => _toggleFavorite(context, ref),
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 350),
+              transitionBuilder: (child, animation) => RotationTransition(
+                turns: Tween(begin: 0.97, end: 1.0).animate(animation),
+                child: child,
+              ),
+              child: Icon(
+                isFavorite ? Icons.star : Icons.star_outline,
+                key: ValueKey(isFavorite),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// Top section
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Flexible(
-                    flex: 2,
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: FadeInImage(
-                          placeholder: MemoryImage(kTransparentImage),
-                          image: NetworkImage(meal.imageUrl),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Flexible(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          meal.title,
-                          style: theme.textTheme.titleMedium!.copyWith(
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            const Icon(Icons.schedule, size: 18),
-                            const SizedBox(width: 8),
-                            Text('${meal.duration} min', style: metaTextStyle),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.work, size: 18),
-                            const SizedBox(width: 4),
-                            Text(meal.complexity.name, style: metaTextStyle),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.attach_money, size: 18),
-                            const SizedBox(width: 4),
-                            Text(meal.affordability.name, style: metaTextStyle),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              _MealHeader(meal: meal, metaStyle: metaStyle),
               const SizedBox(height: 24),
-
-              /// Ingredients
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Ingredients',
-                  style: theme.textTheme.titleMedium!.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha(154),
-                  ),
-                ),
-              ),
+              _SectionTitle('Ingredients'),
               const SizedBox(height: 8),
               ...meal.ingredients.map(
-                (ingredient) => ListTile(
+                (ing) => ListTile(
                   dense: true,
-                  minTileHeight: 8,
                   minVerticalPadding: 8,
                   leading: const Icon(Icons.check_circle_outline),
-                  title: Text(ingredient),
+                  title: Text(ing),
                 ),
               ),
               const SizedBox(height: 24),
-
-              /// Steps
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Steps',
-                  style: theme.textTheme.titleMedium!.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha(154),
-                  ),
-                ),
-              ),
+              _SectionTitle('Steps'),
               const SizedBox(height: 8),
               ...meal.steps.asMap().entries.map(
                 (entry) => ListTile(
                   dense: true,
-                  minTileHeight: 8,
                   minVerticalPadding: 8,
                   leading: CircleAvatar(
                     radius: 14,
@@ -174,6 +94,100 @@ class MealDetailsState extends ConsumerState<MealDetails> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MealHeader extends StatelessWidget {
+  const _MealHeader({required this.meal, required this.metaStyle});
+
+  final Meal meal;
+  final TextStyle metaStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Flexible(
+          flex: 2,
+          child: AspectRatio(
+            aspectRatio: 1,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Hero(
+                tag: meal.id,
+                child: FadeInImage(
+                  placeholder: MemoryImage(kTransparentImage),
+                  image: NetworkImage(meal.imageUrl),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Flexible(
+          flex: 3,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                meal.title,
+                style: theme.textTheme.titleMedium!.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _MetaRow(icon: Icons.schedule, text: '${meal.duration} min'),
+              const SizedBox(height: 8),
+              _MetaRow(icon: Icons.work, text: meal.complexity.name),
+              const SizedBox(height: 8),
+              _MetaRow(icon: Icons.attach_money, text: meal.affordability.name),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetaRow extends StatelessWidget {
+  const _MetaRow({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final metaStyle = TextStyle(
+      color: Theme.of(context).colorScheme.onSurface.withAlpha(154),
+      fontSize: 14,
+    );
+    return Row(
+      children: [
+        Icon(icon, size: 18),
+        const SizedBox(width: 8),
+        Text(text, style: metaStyle),
+      ],
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.title);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+        color: Theme.of(context).colorScheme.onSurface.withAlpha(154),
       ),
     );
   }

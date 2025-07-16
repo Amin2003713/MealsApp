@@ -53,8 +53,13 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     return Scaffold(
       body: AnimatedBuilder(
         animation: _animationController,
-        builder: (context, child) => Padding(
-          padding: EdgeInsets.only(top: 100 - _animationController.value * 100),
+        builder: (context, child) => SlideTransition(
+          position: Tween(end: Offset(0, 0), begin: Offset(0, 0.3)).animate(
+            CurvedAnimation(
+              parent: _animationController,
+              curve: Curves.easeInExpo,
+            ),
+          ),
           child: child,
         ),
         child: GridView(

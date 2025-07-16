@@ -28,12 +28,9 @@ class MealsScreen extends ConsumerWidget {
   List<Meal>? meals;
 
   _onMealSelected(BuildContext context, Meal meal) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) =>
-            MealDetails(meal: meal, favorites: favorites ?? []),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => MealDetails(meal: meal)));
   }
 
   Widget _mealScreenContents(ThemeData theme, WidgetRef ref) {
